@@ -25,6 +25,7 @@ CFLAGS = -Wall -Wextra -Werror
 all: $(NAME)
 
 $(NAME): $(BUILD_DIR) $(OBJS)
+	@make -C libft
 	$(CC) $(CFLAGS) -I $(INCLU_DIR) -o $@ $(OBJS)
 
 $(BUILD_DIR)/%.o: srcs/%.c
@@ -36,9 +37,11 @@ $(BUILD_DIR):
 .PHONY: all clean fclean re
 
 clean:
+	@make -C libft clean
 	rm -rf $(OBJS) $(BUILD_DIR)
 
 fclean: clean
+	@make -C libft fclean
 	rm -f $(NAME)
 
 re: fclean all
