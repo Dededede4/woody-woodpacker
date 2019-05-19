@@ -36,7 +36,7 @@ void				write_char_in_buffer(t_format *env, t_arg *arg,
 	to_print = (unsigned char)va_arg(ap, int);
 	if (!arg->flags.rev_pad)
 		padding_char(env, arg, buffer);
-	if (to_print == (unsigned char)NULL)
+	if (to_print == 0)
 		put_char_in_buffer(env, 0, buffer);
 	else
 		put_char_in_buffer(env, to_print, buffer);

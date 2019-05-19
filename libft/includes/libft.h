@@ -17,6 +17,9 @@
 # include <unistd.h>
 # include <stdlib.h>
 
+# define intmax_t	long long int
+# define uintmax_t	unsigned long long int
+
 # include "ft_printf.h"
 # include "get_next_line.h"
 
