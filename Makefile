@@ -16,13 +16,13 @@ INCLU_DIR = includes
 BUILD_DIR = objs
 LIBFT_DIR = libft
 
-SRCS = main.c
+SRCS = main.c parse_program_hdr.c
 
 OBJS := $(addprefix $(BUILD_DIR)/,$(patsubst %.c,%.o,$(SRCS)))
 
 CC = gcc
 CFLAGS = -Wall -Wextra -Werror
-IFLAGS = -I $(INCLU_DIR) -I $(LIBFT_DIR)
+IFLAGS = -I $(INCLU_DIR) -I $(LIBFT_DIR)/includes
 
 all: $(NAME)
 
