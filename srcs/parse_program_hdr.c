@@ -49,6 +49,12 @@ int	parse_ph_64(Elf64_Ehdr *map, size_t size) {
 		tmp = (Elf64_Phdr *)((void *)map + map->e_phoff);
 		for (i = 0; i < map->e_phnum; i++) {
 			print_phtype(tmp);
+
+			if (tmp->p_type == PT_NOTE) {
+				tmp->p_vaddr = 0x00;
+				tmp->p_vaddr = 0x00;
+			}
+
 			tmp++;
 		}
 	}
