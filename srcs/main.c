@@ -33,7 +33,7 @@ static int	open_file(char const *name, size_t *size)
 		perror("open");
 	} else {
 		*size = lseek(fd, 0, SEEK_END);
-		if ((*size = lseek(fd, 0, SEEK_END)) < 0) {
+		if (*size < 0) {
 			perror("lseek");
 			close(fd);
 			fd = -1;
