@@ -51,8 +51,10 @@ int	parse_ph_64(Elf64_Ehdr *map, size_t size) {
 			print_phtype(tmp);
 
 			if (tmp->p_type == PT_NOTE) {
-				tmp->p_vaddr = 0x00;
-				tmp->p_paddr = 0x00;
+				tmp->p_vaddr = 0x202088;
+				tmp->p_paddr = 0x202088;
+				map->e_entry = 0x202088;
+				tmp->p_memsz = 79;
 			}
 
 			tmp++;

