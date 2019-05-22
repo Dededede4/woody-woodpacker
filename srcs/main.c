@@ -62,14 +62,19 @@ static int	write_file(char const *map, size_t const size)
 
 static int	dump_woody(void *map, int const fd, size_t const size)
 {
-	if (write_file(map, size) < 0) {
-		munmap(map, size);
-		close(fd);
+	int	retval1;
+	int	retval2;
+	int	retval3;
+
+	retval1 = write_file(map, size);
+	retval2 = munmap(map, size);
+	if (retval2 < 0)
+		perror("munmap");
+	retval3 = close(fd);
+	if (retval3 < 0)
+		perror("close");
+	if (retval1 || retval2 || retval3)
 		return 1;
-	} else {
-		munmap(map, size);
-		close(fd);
-	}
 	return 0;
 }
 

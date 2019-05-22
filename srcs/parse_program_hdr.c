@@ -41,7 +41,8 @@ static void	print_phtype(Elf64_Phdr *hdr) {
 	}
 }
 
-int	parse_ph_64(Elf64_Ehdr *map, size_t size) {
+int	parse_ph_64(Elf64_Ehdr *map, size_t size)
+{
 	Elf64_Phdr	*tmp;
 	int		i;
 
