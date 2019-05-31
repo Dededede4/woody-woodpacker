@@ -11,46 +11,12 @@
 /* ************************************************************************** */
 
 #include "woody.h"
-#include <stdlib.h>
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <errno.h>
-#include <string.h>
 
-/*
- * function to open binary and get its size, doesn't map it yet
- * you have to close fd yourself
- * return file fd or -1 on error, take pointer on int for size
- */
-static int	open_file(char const *name, size_t *size)
+static int	write_file(char const *map, long long int const size)
 {
 	int	fd;
 
-	fd = open(name, O_RDONLY);
-	if (fd < 0) {
-		perror("open");
-	} else {
-		*size = lseek(fd, 0, SEEK_END);
-		if (*size < 0) {
-			perror("lseek");
-			close(fd);
-			fd = -1;
-		}
-	}
-	return fd;
-}
-
-/*
- * function to write a modified (or not) copy of binary into woody
- * return -1 on error, 0 on success
- */
-static int	write_file(char const *map, size_t const size)
-{
-	int	fd;
-
-	fd = open("woody", O_RDWR | O_CREAT, 0755);
+	fd = open("woody", O_RDWR | O_CREAT, 755);
 	if (fd < 0) {
 		perror("open");
 		return -1;
@@ -60,7 +26,7 @@ static int	write_file(char const *map, size_t const size)
 	return 0;
 }
 
-static int	dump_woody(void *map, int const fd, size_t const size)
+static int	dump_woody(void *map, int const fd, long long int const size)
 {
 	int	retval1;
 	int	retval2;
@@ -78,12 +44,29 @@ static int	dump_woody(void *map, int const fd, size_t const size)
 	return 0;
 }
 
+int		open_file(char const *name, long long int *size, int const mod)
+{
+	int	fd;
+
+	fd = open(name, mod);
+	if (fd < 0) {
+		perror("open");
+	} else {
+		*size = lseek(fd, 0, SEEK_END);
+		if (*size < 0) {
+			perror("lseek");
+			close(fd);
+			fd = -1;
+		}
+	}
+	return fd;
+}
+
 int		main(int argc, char **argv)
 {
-	size_t		size;
+	long long int	size;
 	int		fd;
 	char		*map;
-	Elf64_Ehdr	*hdr;
 
 	if (argc != 2) {
 		dprintf(STDERR_FILENO, "Error: Invalid number of arguments\n");
@@ -91,7 +74,7 @@ int		main(int argc, char **argv)
 		return 1;
 	}
 
-	fd = open_file(argv[1], &size);
+	fd = open_file(argv[1], &size, O_RDONLY);
 	if (fd < 0)
 		return 1;
 
@@ -100,8 +83,7 @@ int		main(int argc, char **argv)
 		perror("mmap");
 		return (1);
 	}
-
-	hdr = (Elf64_Ehdr *)map;
-	parse_ph_64(hdr, size);
+	if (parse_ph_64((Elf64_Ehdr *)map) < 0)
+		return -1;
 	return dump_woody(map, fd, size);
 }

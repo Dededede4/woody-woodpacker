@@ -1,9 +1,16 @@
 #ifndef WOODY_H
 # define WOODY_H
 
-# include <stdio.h>	
+# include <stdlib.h>
+# include <fcntl.h>
+# include <sys/mman.h>
+# include <unistd.h>
+# include <errno.h>
+# include <string.h>
+# include <stdio.h>
 # include <elf.h>
 
-int	parse_ph_64(Elf64_Ehdr *map, size_t size);
+int	open_file(char const *name, long long int *size, int const mod);
+int	parse_ph_64(Elf64_Ehdr *map);
 
 #endif
