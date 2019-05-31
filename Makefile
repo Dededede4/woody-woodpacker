@@ -21,7 +21,7 @@ SRCS = main.c parse_program_hdr.c
 OBJS := $(addprefix $(BUILD_DIR)/,$(patsubst %.c,%.o,$(SRCS)))
 
 CC = gcc
-CFLAGS = -Wall -Wextra -Werror
+CFLAGS = -Wall -Wextra -Werror -g
 IFLAGS = -I $(INCLU_DIR) -I $(LIBFT_DIR)/includes
 
 all: $(NAME)
@@ -31,7 +31,7 @@ $(NAME): $(BUILD_DIR) $(OBJS)
 	$(CC) $(CFLAGS) $(IFLAGS) -o $@ $(OBJS)
 
 $(BUILD_DIR)/%.o: srcs/%.c
-	$(CC) -c $< -o $@ -I $(INCLU_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@ -I $(INCLU_DIR)
 
 $(BUILD_DIR):
 	@mkdir -p $@
