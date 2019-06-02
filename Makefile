@@ -23,12 +23,13 @@ OBJS := $(addprefix $(BUILD_DIR)/,$(patsubst %.c,%.o,$(SRCS)))
 CC = gcc
 CFLAGS = -Wall -Wextra -Werror -g
 IFLAGS = -I $(INCLU_DIR) -I $(LIBFT_DIR)/includes
+LFLAGS =  -L./libft -lft
 
 all: $(NAME)
 
 $(NAME): $(BUILD_DIR) $(OBJS)
 	@make -C libft
-	$(CC) $(CFLAGS) $(IFLAGS) -o $@ $(OBJS)
+	$(CC) $(CFLAGS) $(IFLAGS) -o $@ $(OBJS) $(LFLAGS)
 
 $(BUILD_DIR)/%.o: srcs/%.c
 	$(CC) $(CFLAGS) -c $< -o $@ -I $(INCLU_DIR)
