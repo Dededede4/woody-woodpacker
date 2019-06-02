@@ -16,7 +16,7 @@ static int	write_file(char const *map, long long int const size)
 {
 	int	fd;
 
-	fd = open("woody", O_RDWR | O_CREAT, 755);
+	fd = open("woody", O_RDWR|O_CREAT|O_TRUNC, 0755);
 	if (fd < 0) {
 		perror("open");
 		return -1;
