@@ -59,27 +59,54 @@ static int		check_file_ident(Elf64_Ehdr *map, long long int const size)
 	return -1;
 }
 
+
+Elf64_Shdr *get_text_segment(Elf64_Ehdr *map)
+{
+	Elf64_Shdr *tmp;
+	char *tab;
+	int i;
+
+
+	if (map->e_shoff > 0)
+	{
+		tmp = (Elf64_Shdr * )((void*) map + map->e_shoff);
+		tab = (char*)(((void*)map) + (tmp[map->e_shstrndx]).sh_offset);
+		for (i = 0; i < map->e_shnum; i++)
+		{
+			if (ft_strcmp(".text", tab + tmp->sh_name) == 0)
+			{
+				return (tmp);
+			}
+			tmp++;
+		}
+		
+	}
+	return (NULL);
+}
+
+
 int	parse_ph_64(Elf64_Ehdr *map, long long int const size, unsigned char *secret)
 {
 	Elf64_Phdr	*tmp;
 	unsigned int	maxaddr;
 	int		maxoff;
 	int		i;
-	Elf64_Phdr	*saved;
-
+	Elf64_Shdr *segment;
+	
+	(void)secret;
+	
 	if (check_file_ident(map, size) < 0)
 		return -1;
 	maxaddr = 0x0;
 	maxoff = 0x0;
-	saved = NULL;
 	if (map->e_phnum > 0) {
 		tmp = (Elf64_Phdr *)((void *)map + map->e_phoff);
 		for (i = 0; i < map->e_phnum; i++) {
+			printf(".\n");
 			if (maxaddr < tmp->p_vaddr + tmp->p_memsz) {
-				if (tmp->p_flags & (PF_X > 0)) {
+				if ((tmp->p_flags & PF_X) > 0) {
 					maxaddr = tmp->p_vaddr + tmp->p_memsz;
 					maxoff = tmp->p_offset + tmp->p_filesz;
-					saved = tmp;
 				}
 			}
 			tmp++;
@@ -87,7 +114,9 @@ int	parse_ph_64(Elf64_Ehdr *map, long long int const size, unsigned char *secret
 	}
 	if (maxaddr == 0)
 		return -1;
-	//if (maxaddr)
-	encrypt_main(map + saved->p_offset, saved->p_filesz, secret);
+	if (NULL == (segment = get_text_segment(map)))
+		return -1;
+	printf("On encrypte à partir de %lu\n", segment->sh_offset);
+	encrypt_main(((void*)map) + segment->sh_offset, segment->sh_size, secret);
 	return inject_code(map, maxaddr, maxoff);
 }
