@@ -32,6 +32,17 @@ static int		inject_code(Elf64_Ehdr *map, int maxaddr, int maxoff)
 	return retval;
 }
 
+static void		encrypt_main(void *bin, size_t len, unsigned char *secret)
+{
+	size_t i = 0;
+
+	while (i < len)
+	{
+		((unsigned char*)bin)[i] = ((unsigned char*)bin)[i] ^ secret[i % 8];
+		i++;
+	}
+}
+
 static int		check_file_ident(Elf64_Ehdr *map, long long int const size)
 {
 	(void)size;
@@ -48,17 +59,19 @@ static int		check_file_ident(Elf64_Ehdr *map, long long int const size)
 	return -1;
 }
 
-int	parse_ph_64(Elf64_Ehdr *map, long long int const size)
+int	parse_ph_64(Elf64_Ehdr *map, long long int const size, unsigned char *secret)
 {
 	Elf64_Phdr	*tmp;
 	unsigned int	maxaddr;
 	int		maxoff;
 	int		i;
+	Elf64_Phdr	*saved;
 
 	if (check_file_ident(map, size) < 0)
 		return -1;
 	maxaddr = 0x0;
 	maxoff = 0x0;
+	saved = NULL;
 	if (map->e_phnum > 0) {
 		tmp = (Elf64_Phdr *)((void *)map + map->e_phoff);
 		for (i = 0; i < map->e_phnum; i++) {
@@ -66,6 +79,7 @@ int	parse_ph_64(Elf64_Ehdr *map, long long int const size)
 				if (tmp->p_flags & (PF_X > 0)) {
 					maxaddr = tmp->p_vaddr + tmp->p_memsz;
 					maxoff = tmp->p_offset + tmp->p_filesz;
+					saved = tmp;
 				}
 			}
 			tmp++;
@@ -74,5 +88,6 @@ int	parse_ph_64(Elf64_Ehdr *map, long long int const size)
 	if (maxaddr == 0)
 		return -1;
 	//if (maxaddr)
+	encrypt_main(map + saved->p_offset, saved->p_filesz, secret);
 	return inject_code(map, maxaddr, maxoff);
 }
