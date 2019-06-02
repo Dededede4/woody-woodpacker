@@ -62,17 +62,30 @@ int		open_file(char const *name, long long int *size, int const mod)
 	return fd;
 }
 
+void gen_secret(unsigned char *secret)
+{
+	int fd;
+
+
+	if((fd = open("/dev/random", O_RDONLY)) < 0)
+		exit(0);
+	read(fd, secret, 8);
+}
+
 int		main(int argc, char **argv)
 {
 	long long int	size;
 	int		fd;
 	char		*map;
+	unsigned char secret[8];
 
 	if (argc != 2) {
 		dprintf(STDERR_FILENO, "Error: Invalid number of arguments\n");
 		dprintf(STDERR_FILENO, "Usage: %s <filename>\n", argv[0]);
 		return 1;
 	}
+
+	gen_secret(secret);
 
 	fd = open_file(argv[1], &size, O_RDONLY);
 	if (fd < 0)
@@ -83,7 +96,7 @@ int		main(int argc, char **argv)
 		perror("mmap");
 		return (1);
 	}
-	if (parse_ph_64((Elf64_Ehdr *)map, size) < 0)
+	if (parse_ph_64((Elf64_Ehdr *)map, size, secret) < 0)
 		return -1;
 	return dump_woody(map, fd, size);
 }
