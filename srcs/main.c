@@ -83,7 +83,7 @@ int		main(int argc, char **argv)
 		perror("mmap");
 		return (1);
 	}
-	if (parse_ph_64((Elf64_Ehdr *)map) < 0)
+	if (parse_ph_64((Elf64_Ehdr *)map, size) < 0)
 		return -1;
 	return dump_woody(map, fd, size);
 }
