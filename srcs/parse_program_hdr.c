@@ -31,7 +31,7 @@ static int		inject_code(Elf64_Ehdr *map, int maxaddr, int maxoff)
 	}
 	return retval;
 }
-
+/*
 static void		encrypt_main(void *bin, size_t len, unsigned char *secret)
 {
 	size_t i = 0;
@@ -42,7 +42,7 @@ static void		encrypt_main(void *bin, size_t len, unsigned char *secret)
 		i++;
 	}
 }
-
+*/
 static int		check_file_ident(Elf64_Ehdr *map, long long int const size)
 {
 	(void)size;
@@ -65,13 +65,14 @@ int	parse_ph_64(Elf64_Ehdr *map, long long int const size, unsigned char *secret
 	unsigned int	maxaddr;
 	int		maxoff;
 	int		i;
-	Elf64_Phdr	*saved;
+	//Elf64_Phdr	*saved;
 
+	(void)secret;
 	if (check_file_ident(map, size) < 0)
 		return -1;
 	maxaddr = 0x0;
 	maxoff = 0x0;
-	saved = NULL;
+	//saved = NULL;
 	if (map->e_phnum > 0) {
 		tmp = (Elf64_Phdr *)((void *)map + map->e_phoff);
 		for (i = 0; i < map->e_phnum; i++) {
@@ -79,15 +80,21 @@ int	parse_ph_64(Elf64_Ehdr *map, long long int const size, unsigned char *secret
 				if (tmp->p_flags & (PF_X > 0)) {
 					maxaddr = tmp->p_vaddr + tmp->p_memsz;
 					maxoff = tmp->p_offset + tmp->p_filesz;
-					saved = tmp;
+	//				saved = tmp;
 				}
 			}
 			tmp++;
 		}
 	}
-	if (maxaddr == 0)
+	if (maxoff > size) {
+		dprintf(STDERR_FILENO, "Error: invalid file format\n");
+		return -1;	
+	}
+	if (maxaddr == 0 || (cave_len((char *)map + maxoff) < PAYLOAD_SIZE)) {
+		dprintf(STDERR_FILENO, "Error: not enough space to insert payload\n");
 		return -1;
+	}
 	//if (maxaddr)
-	encrypt_main(map + saved->p_offset, saved->p_filesz, secret);
+	//encrypt_main(map + saved->p_offset, saved->p_filesz, secret);
 	return inject_code(map, maxaddr, maxoff);
 }

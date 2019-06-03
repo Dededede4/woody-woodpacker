@@ -16,7 +16,7 @@ INCLU_DIR = includes
 BUILD_DIR = objs
 LIBFT_DIR = libft
 
-SRCS = main.c parse_program_hdr.c
+SRCS = main.c parse_program_hdr.c verify_cave.c
 
 OBJS := $(addprefix $(BUILD_DIR)/,$(patsubst %.c,%.o,$(SRCS)))
 
