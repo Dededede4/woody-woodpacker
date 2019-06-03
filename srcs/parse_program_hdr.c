@@ -1,6 +1,24 @@
 #include "woody.h"
 
-static int		inject_code(Elf64_Ehdr *map, int maxaddr, int maxoff)
+void replace_value(char *map, long long int const size, uint64_t searched, uint64_t value)
+{
+	long long int i;
+	long long int stop;
+
+	i = 0;
+	stop = size - sizeof(uint64_t);
+	while (i < stop)
+	{
+		if (*((uint64_t*)map) == searched)
+		{
+			*((uint64_t*)map) = value;	
+		}
+		map++;
+		i++;
+	}
+}
+
+static int		inject_code(Elf64_Ehdr *map, int maxaddr, int maxoff, uint64_t addr_encrypted, uint64_t size_encrypted, uint64_t secret)
 {
 	int		retval;
 	int		fd;
@@ -18,8 +36,16 @@ static int		inject_code(Elf64_Ehdr *map, int maxaddr, int maxoff)
 	}
 	*((char *)((void *)map + maxoff + size)) = 0xe9;
 	*((int *)((void *)map + maxoff + size + 1)) = map->e_entry - (maxaddr + 5 + size);
-	map->e_entry = maxaddr;
+	//printf("-->%llu", map->e_entry);
+	replace_value(binary_virus, size, 0x4242424242424242, addr_encrypted); // Offset start
+	replace_value(binary_virus, size, 0x4343434343434343, size_encrypted); // Longueur à déchiffrer
+	replace_value(binary_virus, size, 0x4444444444444444, secret); // la clef de déchiffrement
+
 	ft_memcpy((void *)map + maxoff, binary_virus, size);
+
+
+	map->e_entry = maxaddr;
+
 	retval = 0;
 	if (munmap(binary_virus, size) < 0) {
 		perror("munmap");
@@ -31,7 +57,7 @@ static int		inject_code(Elf64_Ehdr *map, int maxaddr, int maxoff)
 	}
 	return retval;
 }
-/*
+
 static void		encrypt_main(void *bin, size_t len, unsigned char *secret)
 {
 	size_t i = 0;
@@ -42,7 +68,7 @@ static void		encrypt_main(void *bin, size_t len, unsigned char *secret)
 		i++;
 	}
 }
-*/
+
 static int		check_file_ident(Elf64_Ehdr *map, long long int const size)
 {
 	(void)size;
@@ -85,10 +111,13 @@ Elf64_Shdr *get_text_segment(Elf64_Ehdr *map)
 }
 
 
+
+
 int	parse_ph_64(Elf64_Ehdr *map, long long int const size, unsigned char *secret)
 {
 	Elf64_Phdr	*tmp;
 	unsigned int	maxaddr;
+	unsigned int	vaddr;
 	int		maxoff;
 	int		i;
 	//Elf64_Phdr	*saved;
@@ -99,6 +128,7 @@ int	parse_ph_64(Elf64_Ehdr *map, long long int const size, unsigned char *secret
 		return -1;
 	maxaddr = 0x0;
 	maxoff = 0x0;
+	vaddr = 0x0;
 	//saved = NULL;
 	if (map->e_phnum > 0) {
 		tmp = (Elf64_Phdr *)((void *)map + map->e_phoff);
@@ -107,6 +137,7 @@ int	parse_ph_64(Elf64_Ehdr *map, long long int const size, unsigned char *secret
 			if (maxaddr < tmp->p_vaddr + tmp->p_memsz) {
 				if ((tmp->p_flags & PF_X) > 0) {
 					maxaddr = tmp->p_vaddr + tmp->p_memsz;
+					vaddr = tmp->p_vaddr;
 					maxoff = tmp->p_offset + tmp->p_filesz;
 	//				saved = tmp;
 				}
@@ -123,10 +154,11 @@ int	parse_ph_64(Elf64_Ehdr *map, long long int const size, unsigned char *secret
 		return -1;
 	}
 	//if (maxaddr)
-	//encrypt_main(map + saved->p_offset, saved->p_filesz, secret);
 	if (NULL == (segment = get_text_segment(map)))
 		return -1;
 	printf("On encrypte à partir de %lu\n", segment->sh_offset);
 	encrypt_main(((void*)map) + segment->sh_offset, segment->sh_size, secret);
-	return inject_code(map, maxaddr, maxoff);
+	if(inject_code(map, maxaddr, maxoff, vaddr + segment->sh_offset, segment->sh_size, *((uint64_t*)secret)) == -1)
+		return -1;
+	return (42);
 }

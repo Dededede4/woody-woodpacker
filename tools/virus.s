@@ -12,7 +12,9 @@ start:
   push rax
   push rdi
   push rsi
+  push rsp
   push rdx
+  push rcx
 
   push 0x0A    ; les adresses de la stacks sont décroissantes
   push '.'
@@ -53,10 +55,25 @@ start:
   pop rax
   pop rax
 
-  pop rdx
-  pop rsi
-  pop rdi
-  pop rax
+  mov rax, 0x4242424242424242
+  mov rcx, 0x4343434343434343 ; longueur à déchifrer
+  mov rdx, 0x4444444444444444 ; la clef de déchiffrement
+
+  add rcx, rax
+
+while:
+  xor [rax], dl
+  ror rdx, 8
+  inc rax
+  cmp rax, rcx  
+  jnz while
+
+pop rcx
+pop rdx
+pop rsp
+pop rsi
+pop rdi 
+pop rax
 
   pop rsp
   pop rbp
