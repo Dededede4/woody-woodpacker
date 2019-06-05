@@ -136,6 +136,7 @@ int	parse_ph_64(Elf64_Ehdr *map, long long int const size, unsigned char *secret
 			printf(".\n");
 			if (maxaddr < tmp->p_vaddr + tmp->p_memsz) {
 				if ((tmp->p_flags & PF_X) > 0) {
+					tmp->p_flags |= PF_W;
 					maxaddr = tmp->p_vaddr + tmp->p_memsz;
 					vaddr = tmp->p_vaddr;
 					maxoff = tmp->p_offset + tmp->p_filesz;
