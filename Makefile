@@ -21,7 +21,7 @@ SRCS = main.c parse_program_hdr.c verify_cave.c
 OBJS := $(addprefix $(BUILD_DIR)/,$(patsubst %.c,%.o,$(SRCS)))
 
 CC = gcc
-CFLAGS = -Wall -Wextra -Werror
+CFLAGS = -Wall -Wextra -Werror -g
 IFLAGS = -I $(INCLU_DIR) -I $(LIBFT_DIR)/includes
 LFLAGS =  -L./libft -lft
 

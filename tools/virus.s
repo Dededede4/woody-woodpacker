@@ -62,10 +62,11 @@ start:
 next42lol:
   mov rbx, 0x4141414141414141
   pop rax
-  mov rcx, 0x4343434343434342
+  add rax, 2
+   mov rcx, 0x4343434343434342
  
  sub rax, rbx
-
+ 
 
   ;sub rcx, rax
   ;mov rax, rcx
@@ -97,8 +98,8 @@ pop rcx
 
   ;mov rbx, 42
 
-  xor [rax], dl
- ; mov [rax], rbx
+   xor [rax], dl
+;mov [rax], rbx
   ror rdx, 8
   inc rax
   cmp rax, rcx  

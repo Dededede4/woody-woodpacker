@@ -85,8 +85,9 @@ int		main(int argc, char **argv)
 		return 1;
 	}
 
+	ft_putstr("aaa");
 	gen_secret(secret);
-
+	ft_putstr("bbb\n");
 	fd = open_file(argv[1], &size, O_RDONLY);
 	if (fd < 0)
 		return 1;
