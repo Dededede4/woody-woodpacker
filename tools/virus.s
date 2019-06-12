@@ -95,10 +95,10 @@ push rdx
 pop rdx
 pop rcx
 
-  and rbx, 0
+  ;mov rbx, 42
 
-  ;xor [rax], dl
-  mov [rax], rbx
+  xor [rax], dl
+ ; mov [rax], rbx
   ror rdx, 8
   inc rax
   cmp rax, rcx  
