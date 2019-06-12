@@ -1,21 +1,39 @@
 #include "woody.h"
+#include <byteswap.h>
+
+       #include <sys/types.h>
+	       #include <sys/stat.h>
+	       #include <fcntl.h>
 
 void replace_value(char *map, long long int const size, uint64_t searched, uint64_t value)
 {
 	long long int i;
 	long long int stop;
+	int founded;
 
 	i = 0;
+	founded = 0;
 	stop = size - sizeof(uint64_t);
 	while (i < stop)
 	{
 		if (*((uint64_t*)map) == searched)
 		{
-			*((uint64_t*)map) = value;	
+			if (searched == 0x4141414141414141)
+			{
+				printf("%lx --> %llx\n", searched, i + value);
+				*((uint64_t*)map) = (i + value);
+			}
+			else
+			{
+				printf("%lx --> %lx\n", searched, value);
+				*((uint64_t*)map) = (value);
+			}
+			founded++;
 		}
 		map++;
 		i++;
 	}
+	printf("%lx Founded : %i\n", searched, founded);
 }
 
 static int		inject_code(Elf64_Ehdr *map, int maxaddr, int maxoff, uint64_t addr_encrypted, uint64_t size_encrypted, uint64_t secret)
@@ -37,8 +55,10 @@ static int		inject_code(Elf64_Ehdr *map, int maxaddr, int maxoff, uint64_t addr_
 	*((char *)((void *)map + maxoff + size)) = 0xe9;
 	*((int *)((void *)map + maxoff + size + 1)) = map->e_entry - (maxaddr + 5 + size);
 	//printf("-->%llu", map->e_entry);
-	replace_value(binary_virus, size, 0x4242424242424242, addr_encrypted); // Offset start
-	replace_value(binary_virus, size, 0x4343434343434343, size_encrypted); // Longueur à déchiffrer
+	(void)addr_encrypted;
+	replace_value(binary_virus, size, 0x4141414141414141, size_encrypted); // Offset start
+	replace_value(binary_virus, size, 0x4242424242424242, maxoff); // Offset start
+	replace_value(binary_virus, size, 0x4343434343434342, size_encrypted); // Longueur à déchiffrer
 	replace_value(binary_virus, size, 0x4444444444444444, secret); // la clef de déchiffrement
 
 	ft_memcpy((void *)map + maxoff, binary_virus, size);
@@ -47,6 +67,8 @@ static int		inject_code(Elf64_Ehdr *map, int maxaddr, int maxoff, uint64_t addr_
 	map->e_entry = maxaddr;
 
 	retval = 0;
+	fd = open("virus_transformed.bin", O_RDWR|O_CREAT|O_TRUNC, 0777);
+	write(fd, binary_virus, size);
 	if (munmap(binary_virus, size) < 0) {
 		perror("munmap");
 		retval = -1;
@@ -62,9 +84,11 @@ static void		encrypt_main(void *bin, size_t len, unsigned char *secret)
 {
 	size_t i = 0;
 
+	(void)bin;
+	(void)secret;
 	while (i < len)
 	{
-		((unsigned char*)bin)[i] = ((unsigned char*)bin)[i] ^ secret[i % 8];
+		//((unsigned char*)bin)[i] = ((unsigned char*)bin)[i] ^ secret[7 - (i % 8)];
 		i++;
 	}
 }
@@ -120,7 +144,7 @@ int	parse_ph_64(Elf64_Ehdr *map, long long int const size, unsigned char *secret
 	unsigned int	vaddr;
 	int		maxoff;
 	int		i;
-	//Elf64_Phdr	*saved;
+	Elf64_Phdr	*saved;
 	Elf64_Shdr *segment;
 	
 	(void)secret;
@@ -129,7 +153,7 @@ int	parse_ph_64(Elf64_Ehdr *map, long long int const size, unsigned char *secret
 	maxaddr = 0x0;
 	maxoff = 0x0;
 	vaddr = 0x0;
-	//saved = NULL;
+	saved = NULL;
 	if (map->e_phnum > 0) {
 		tmp = (Elf64_Phdr *)((void *)map + map->e_phoff);
 		for (i = 0; i < map->e_phnum; i++) {
@@ -140,7 +164,7 @@ int	parse_ph_64(Elf64_Ehdr *map, long long int const size, unsigned char *secret
 					maxaddr = tmp->p_vaddr + tmp->p_memsz;
 					vaddr = tmp->p_vaddr;
 					maxoff = tmp->p_offset + tmp->p_filesz;
-	//				saved = tmp;
+					saved = tmp;
 				}
 			}
 			tmp++;
@@ -161,5 +185,14 @@ int	parse_ph_64(Elf64_Ehdr *map, long long int const size, unsigned char *secret
 	encrypt_main(((void*)map) + segment->sh_offset, segment->sh_size, secret);
 	if(inject_code(map, maxaddr, maxoff, vaddr + segment->sh_offset, segment->sh_size, *((uint64_t*)secret)) == -1)
 		return -1;
+
+	long long int	size2;
+
+	open_file("virus.bin", &size2, O_RDONLY);
+
+
+	saved->p_memsz += size2;
+	saved->p_filesz += size2;
+        segment->sh_size += size2;
 	return (42);
 }
