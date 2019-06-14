@@ -45,7 +45,7 @@ int main()
    if (fd > 0)
    {
    		printf("unsigned char virus[%zu] = {\n", size);
-	   while ((len = read(fd, buff, 3)) > 0)
+	   while ((len = read(fd, buff, 16)) > 0)
 	   {
 	   		while (i < len)
 	   		{

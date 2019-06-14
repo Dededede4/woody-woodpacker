@@ -9,13 +9,28 @@
 # include <string.h>
 # include <stdio.h>
 # include <elf.h>
+# include <byteswap.h>
+# include <sys/types.h>
+# include <sys/stat.h>
+# include <stdint.h>
 
 # include "../libft/includes/libft.h"
 
-# define PAYLOAD_SIZE 50
+# define VIRUS_SIZE 151
 
-int	open_file(char const *name, long long int *size, int const mod);
-int	parse_ph_64(Elf64_Ehdr *map, long long int const size, unsigned char *secret);
-int	cave_len(char *cave);
+extern unsigned char	virus[VIRUS_SIZE];
+
+int	open_file(char const *name, int64_t *size, int const mod);
+int	write_file(char const *map, int64_t const size);
+int	dump_woody(void *map, int const fd, int64_t const size);
+
+int	packer(Elf64_Ehdr *map, int64_t const size, unsigned char *secret);
+int	check_file_ident(Elf64_Ehdr *map, int64_t const size);
+int	check_cave_len(char *cave);
+
+int 	gen_secret(unsigned char *secret);
+void	encrypt_main(void *bin, size_t len, unsigned char *secret);
+
+int	inject_code(Elf64_Ehdr *map, int maxaddr, int maxoff, uint64_t size_encrypted, uint64_t secret);
 
 #endif

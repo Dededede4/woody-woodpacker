@@ -54,8 +54,6 @@ start:
   pop rax
   pop rax
   pop rax
-
-
   ;mov rax, 0x0242424242424242 ;
 
   call next42lol
@@ -67,36 +65,27 @@ next42lol:
  
  sub rax, rbx
  
-
-  ;sub rcx, rax
-  ;mov rax, rcx
-
   mov rdx, 0x4444444444444444 ; la clef de déchiffrement\
 
-  ;sub rax
   ;relative start (exec time) - hard coded start = ASLR
 
-  ;[rel start] - 
 
   add rcx, rax
-  ;;sub rcx, 0x100
 while:
 
-push rcx
-push rdx
- push rax
-  push '-'
-  mov rax, 1
-  mov rdi, 1
-  mov rsi, rsp      ; on affiche de la plus petite adresse à la plus grande
-  mov rdx, 1     ; nombre de bits (??????)
-  syscall           ; );
-  pop rax
- pop rax
-pop rdx
-pop rcx
-
-  ;mov rbx, 42
+;push rcx
+;push rdx
+; push rax
+;  push '-'
+;  mov rax, 1
+;  mov rdi, 1
+;  mov rsi, rsp      ; on affiche de la plus petite adresse à la plus grande
+;  mov rdx, 1     ; nombre de bits (??????)
+;  syscall           ; );
+;  pop rax
+; pop rax
+;pop rdx
+;pop rcx
 
    xor [rax], dl
 ;mov [rax], rbx
@@ -105,13 +94,13 @@ pop rcx
   cmp rax, rcx  
   jnz while
 
-  push '@'
-  mov rax, 1
-  mov rdi, 1
-  mov rsi, rsp      ; on affiche de la plus petite adresse à la plus grande
-  mov rdx, 1     ; nombre de bits (??????)
-  syscall           ; );
-  pop rax
+;  push '@'
+;  mov rax, 1
+;  mov rdi, 1
+;  mov rsi, rsp      ; on affiche de la plus petite adresse à la plus grande
+;  mov rdx, 1     ; nombre de bits (??????)
+;  syscall           ; );
+;  pop rax
  
 
 pop rcx
